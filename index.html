@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registro de Asistencia</title>
+  <title>Registro de Asistencia - PROEDSO</title>
 
   <style>
     * {
@@ -27,14 +28,21 @@
       max-width: 380px;
       border-radius: 18px;
       padding: 25px 22px;
-      box-shadow: 0 15px 35px rgba(0,0,0,.25);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, .25);
       text-align: center;
       animation: fadeIn .4s ease;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     h2 {
@@ -91,10 +99,21 @@
       min-height: 20px;
     }
 
-    .ok { color: #198754; }
-    .warn { color: #f59f00; }
-    .err { color: #dc3545; }
-    .info { color: #0d6efd; }
+    .ok {
+      color: #198754;
+    }
+
+    .warn {
+      color: #f59f00;
+    }
+
+    .err {
+      color: #dc3545;
+    }
+
+    .info {
+      color: #0d6efd;
+    }
 
     footer {
       margin-top: 18px;
@@ -103,86 +122,156 @@
     }
   </style>
 </head>
-<body>
 
+<body>
   <div class="card">
     <h2>📋 Registro de Asistencia</h2>
-    <p class="subtitle">Marca tu asistencia usando tu ubicación</p>
+    <p class="subtitle">PROEDSO - Marca tu asistencia</p>
 
-    <input type="text" id="nombre" placeholder="👤 Ingresa tu nombre">
-
+    <input type="text" id="nombre" placeholder="👤 Ingresa tu nombre completo">
     <button id="btn" onclick="marcar()">📍 Marcar asistencia</button>
-
     <div id="msg"></div>
-
-    <footer>
-      Asegúrate de activar tu GPS
-    </footer>
+    <footer>Activa tu GPS para continuar</footer>
   </div>
 
-<script>
-const URL_BACKEND = "https://script.google.com/macros/s/AKfycbwy62q363l-FiFLC9fwfeMzG-6kWzDb3JgGxiDPAHuHa-R-rCggJD4WHAvPXEkUGkqq/exec";
+  <script>
+    const URL_BACKEND = "https://script.google.com/macros/s/AKfycbxSdPNKfZy-L0w9nOMYLWOKy6dmrZYnFJxegvgguO_9_ZjpbsZeAQP1aYjux6s2xdDU/exec";
 
-function marcar() {
-  const nombre = document.getElementById("nombre").value.trim();
-  const msg = document.getElementById("msg");
-  const btn = document.getElementById("btn");
+    // Horarios colaboradores (sin acentos)
+    const horarios = {
+      "fabricio daniel pacheco calderon": [{ inicio: "09:00", fin: "12:30" }, { inicio: "15:00", fin: "19:00" }],
+      "ivan maicol gonzales rodriguez": [{ inicio: "14:00", fin: "19:00" }],
+      "abigail joyce nique marquina": [{ inicio: "08:30", fin: "13:30" }],
+      "ivana becerra ortigas": [{ inicio: "09:00", fin: "13:00" }, { inicio: "15:00", fin: "19:00" }],
+      "cesar agusto galvez ascoy": [{ inicio: "09:00", fin: "13:00" }]
+    };
 
-  msg.className = "";
+    // Normaliza texto: minúsculas, sin acentos, trim
+    function normalizar(texto) {
+      return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    }
 
-  if (!nombre) {
-    msg.textContent = "⚠️ Ingresa tu nombre";
-    msg.classList.add("warn");
-    return;
-  }
+    // Convierte HH:MM a Date
+    function crearHora(hora, minuto) {
+      const d = new Date();
+      d.setHours(hora, minuto, 0, 0);
+      return d;
+    }
 
-  btn.disabled = true;
-  msg.textContent = "📡 Obteniendo ubicación...";
-  msg.classList.add("info");
-
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      fetch(URL_BACKEND, {
-        method: "POST",
-        body: JSON.stringify({
-          nombre: nombre,
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude
-        })
-      })
-      .then(r => r.json())
-      .then(res => {
-        msg.className = "";
-        btn.disabled = false;
-
-        if (res.permitido) {
-          msg.textContent = `✅ Asistencia registrada (${res.distancia} m)`;
-          msg.classList.add("ok");
-        } 
-        else if (res.motivo === "DUPLICADO") {
-          msg.textContent = "⚠️ Ya marcaste asistencia hoy";
-          msg.classList.add("warn");
-        } 
-        else {
-          msg.textContent = `❌ Fuera del local (${res.distancia} m)`;
-          msg.classList.add("err");
+    function buscarNombre(nombre) {
+      const n = normalizar(nombre).split(" "); // palabras del input
+      for (const clave in horarios) {
+        const clavePalabras = clave.split(" ");
+        // buscar al menos 1 palabra coincidente
+        if (n.some(palabra => clavePalabras.includes(palabra))) {
+          return horarios[clave];
         }
-      })
-      .catch(() => {
-        btn.disabled = false;
-        msg.textContent = "❌ Error al enviar datos";
-        msg.classList.add("err");
-      });
-    },
-    () => {
-      btn.disabled = false;
-      msg.textContent = "❌ Activa el GPS y acepta permisos";
-      msg.classList.add("err");
-    },
-    { enableHighAccuracy: true }
-  );
-}
-</script>
+      }
+      return null;
+    }
 
+
+
+    // Validación horario 30min antes y 5min después
+    function validarHorario(nombre) {
+      const ahora = new Date();
+      const turnos = buscarNombre(nombre);
+      if (!turnos) return { ok: false, msg: "❌ No estás registrado en el sistema" };
+
+      for (let t of turnos) {
+        const [hIni, mIni] = t.inicio.split(":").map(Number);
+        const inicio = crearHora(hIni, mIni - 30);
+        const fin = crearHora(hIni, mIni + 5);
+        if (ahora >= inicio && ahora <= fin) return { ok: true };
+      }
+
+      return { ok: false, msg: "⏰ Solo puedes marcar entre 30 min antes y 5 min después del inicio del turno" };
+    }
+
+    function marcar() {
+      const nombreInput = document.getElementById("nombre");
+      const nombre = nombreInput.value.trim();
+      const msg = document.getElementById("msg");
+      const btn = document.getElementById("btn");
+
+      msg.className = "";
+      if (!nombre) {
+        msg.textContent = "⚠️ Ingresa tu nombre";
+        msg.classList.add("warn");
+        return;
+      }
+
+      const validacion = validarHorario(nombre);
+      if (!validacion.ok) {
+        msg.textContent = validacion.msg;
+        msg.classList.add("err");
+        return;
+      }
+
+      // Calculamos el estado según el turno
+      const ahora = new Date();
+      const turnos = buscarNombre(nombre);
+      let estado = "SIN TURNO";
+
+      for (let t of turnos) {
+        const [hIni, mIni] = t.inicio.split(":").map(Number);
+        const inicio = crearHora(hIni, mIni - 30);
+        const fin = crearHora(hIni, mIni + 5);
+        if (ahora >= inicio && ahora <= fin) {
+          estado = "PUNTUAL";
+          break;
+        } else if (ahora > fin) {
+          estado = "TARDE";
+        }
+      }
+
+      btn.disabled = true;
+      msg.textContent = "📡 Obteniendo ubicación...";
+      msg.classList.add("info");
+
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          fetch(URL_BACKEND, {
+            method: "POST",
+            body: JSON.stringify({
+              nombre: nombre,
+              lat: pos.coords.latitude,
+              lon: pos.coords.longitude,
+              estado // <-- enviamos estado calculado
+            })
+          })
+            .then(r => r.json())
+            .then(res => {
+              msg.className = "";
+              btn.disabled = false;
+
+              if (res.permitido) {
+                msg.textContent = `✅ Asistencia registrada (${res.distancia || "N/A"} m)`;
+                msg.classList.add("ok");
+              } else if (res.motivo === "DUPLICADO") {
+                msg.textContent = "⚠️ Ya marcaste asistencia hoy";
+                msg.classList.add("warn");
+              } else {
+                msg.textContent = `❌ Fuera del local (${res.distancia || "N/A"} m)`;
+                msg.classList.add("err");
+              }
+            })
+            .catch(() => {
+              btn.disabled = false;
+              msg.textContent = "❌ Error al enviar datos";
+              msg.classList.add("err");
+            });
+        },
+        () => {
+          btn.disabled = false;
+          msg.textContent = "❌ Activa el GPS y acepta permisos";
+          msg.classList.add("err");
+        },
+        { enableHighAccuracy: true }
+      );
+    }
+
+  </script>
 </body>
+
 </html>
