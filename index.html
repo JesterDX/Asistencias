@@ -173,20 +173,36 @@
 
 
     // Validación horario 30min antes y 5min después
-    function validarHorario(nombre) {
-      const ahora = new Date();
-      const turnos = buscarNombre(nombre);
-      if (!turnos) return { ok: false, msg: "❌ No estás registrado en el sistema" };
+function validarHorario(nombre) {
+  const ahora = new Date();
+  const turnos = buscarNombre(nombre);
+  if (!turnos) return { ok: false, msg: "❌ No estás registrado en el sistema" };
 
-      for (let t of turnos) {
-        const [hIni, mIni] = t.inicio.split(":").map(Number);
-        const inicio = crearHora(hIni, mIni - 30);
-        const fin = crearHora(hIni, mIni + 5);
-        if (ahora >= inicio && ahora <= fin) return { ok: true };
-      }
+  for (let t of turnos) {
+    const [hIni, mIni] = t.inicio.split(":").map(Number);
+    const inicioPermitido = crearHora(hIni, mIni - 30);
+    const inicioTurno = crearHora(hIni, mIni);
+    const limitePuntual = crearHora(hIni, mIni + 5);
 
-      return { ok: false, msg: "⏰ Solo puedes marcar entre 30 min antes y 5 min después del inicio del turno" };
+    // ❌ Muy temprano
+    if (ahora < inicioPermitido) {
+      return { ok: false, msg: "⏰ Aún no es hora de marcar asistencia" };
     }
+
+    // ✅ Puntual
+    if (ahora >= inicioPermitido && ahora <= limitePuntual) {
+      return { ok: true, estado: "PUNTUAL" };
+    }
+
+    // ⚠️ Tardanza
+    if (ahora > limitePuntual) {
+      return { ok: true, estado: "TARDE" };
+    }
+  }
+
+  return { ok: false, msg: "❌ No tienes turno en este horario" };
+}
+
 
     function marcar() {
       const nombreInput = document.getElementById("nombre");
@@ -201,29 +217,14 @@
         return;
       }
 
-      const validacion = validarHorario(nombre);
-      if (!validacion.ok) {
-        msg.textContent = validacion.msg;
-        msg.classList.add("err");
-        return;
-      }
+const validacion = validarHorario(nombre);
+if (!validacion.ok) {
+  msg.textContent = validacion.msg;
+  msg.classList.add("err");
+  return;
+}
 
-      // Calculamos el estado según el turno
-      const ahora = new Date();
-      const turnos = buscarNombre(nombre);
-      let estado = "SIN TURNO";
-
-      for (let t of turnos) {
-        const [hIni, mIni] = t.inicio.split(":").map(Number);
-        const inicio = crearHora(hIni, mIni - 30);
-        const fin = crearHora(hIni, mIni + 5);
-        if (ahora >= inicio && ahora <= fin) {
-          estado = "PUNTUAL";
-          break;
-        } else if (ahora > fin) {
-          estado = "TARDE";
-        }
-      }
+const estado = validacion.estado;
 
       btn.disabled = true;
       msg.textContent = "📡 Obteniendo ubicación...";
@@ -275,4 +276,5 @@
 </body>
 
 </html>
+
 
