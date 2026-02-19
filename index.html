@@ -138,13 +138,30 @@
     const URL_BACKEND = "https://script.google.com/macros/s/AKfycbxSdPNKfZy-L0w9nOMYLWOKy6dmrZYnFJxegvgguO_9_ZjpbsZeAQP1aYjux6s2xdDU/exec";
 
     // Horarios colaboradores (sin acentos)
-    const horarios = {
-      "fabricio daniel pacheco calderon": [{ inicio: "09:00", fin: "12:30" }, { inicio: "15:00", fin: "19:00" }],
-      "ivan maicol gonzales rodriguez": [{ inicio: "14:00", fin: "19:00" }],
-      "abigail joyce nique marquina": [{ inicio: "08:30", fin: "13:30" }],
-      "ivana becerra ortigas": [{ inicio: "09:00", fin: "13:00" }, { inicio: "15:00", fin: "19:00" }],
-      "cesar agusto galvez ascoy": [{ inicio: "09:00", fin: "13:00" }]
-    };
+const horarios = {
+  "fabricio daniel pacheco calderon": [
+    { inicio: "09:00", fin: "12:30" },
+    { inicio: "15:00", fin: "19:00" }
+  ],
+  "ivan maicol gonzales rodriguez": [
+    { inicio: "14:00", fin: "19:00" }
+  ],
+  "abigail joyce nique marquina": [
+    { inicio: "08:30", fin: "13:30" }
+  ],
+  "ivana becerra ortigas": [
+    { inicio: "09:00", fin: "13:00" },
+    { inicio: "15:00", fin: "19:00" }
+  ],
+  "cesar agusto galvez ascoy": [
+    { inicio: "09:00", fin: "13:00" }
+  ],
+  "emelyn yasmin aguirre valverde": [
+    { inicio: "09:00", fin: "13:00" },
+    { inicio: "15:00", fin: "19:00" }
+  ]
+};
+
 
     // Normaliza texto: minúsculas, sin acentos, trim
     function normalizar(texto) {
@@ -276,5 +293,6 @@ const estado = validacion.estado;
 </body>
 
 </html>
+
 
 
